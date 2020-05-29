@@ -39,7 +39,7 @@ var budgetController = (function(){
         addItem : function(type, des, val){
             var newItem,id;
             if(data.allItems[type].length > 0){
-            id =data.allItems[type][data.allItems[type].length-1],id+1;
+            id =data.allItems[type][data.allItems[type].length-1].id+1;
             }
             else{
                 id=0;
@@ -55,6 +55,19 @@ var budgetController = (function(){
             return newItem;
             
 
+        },
+        deleteItem : function(type, id){
+            var ids,index;
+               
+            var ids=  data.allItems[type].map(function(current){
+                return current.id;
+
+            });
+
+            index=ids.indexOf(id);
+            if(index!== -1){
+                data.allItems[type].splice(index,1);
+            }
         },
 
         calculateBudget : function(){
@@ -107,7 +120,13 @@ var UIController = (function(){
         inputValue : '.add__value',
         inputButton : '.add__btn',
         incomeContainer : '.income__list',
-        expensesContainer : '.expenses__list'
+        expensesContainer : '.expenses__list',
+        budgetLabel:'.budget__value',
+        incomeLabel:'.budget__income--value',
+        expenseLable:'.budget__expenses--value',
+        percentageLabel:'.budget__expenses--percentage',
+        container:'.container'
+
 
     };
     return {
@@ -138,6 +157,12 @@ var UIController = (function(){
 
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
     },
+    deleteItem:function(selectorID){
+        var el=document.getElementById(selectorID);
+        el.parentNode.removeChild(el);
+
+
+    },
 
         clearFileds: function(){
             var fields;
@@ -155,6 +180,19 @@ var UIController = (function(){
 
 
     },
+        displayBudget:function(obj){
+            document.querySelector(DOMstrings.budgetLabel).textContent=obj.budget;
+            document.querySelector(DOMstrings.incomeLabel).textContent=obj.totalInc;
+            document.querySelector(DOMstrings.expenseLable).textContent=obj.totalExp;
+            
+            if(obj.percentage>0){
+                document.querySelector(DOMstrings.percentageLabel).textContent=obj.percentage+'%';
+
+            }else{
+                document.querySelector(DOMstrings.percentageLabel).textContent='---'; 
+            }
+
+        },
 
     getDOMstrings : function(){
         return DOMstrings;  
@@ -186,6 +224,8 @@ var Controller = (function(budgetCtrl, UICtrl){
             
     
         }); 
+
+        document.querySelector(DOM.container).addEventListener('click',ctrlDeleteItem);  
     };
     
     var updateBudget=function(){
@@ -193,6 +233,8 @@ var Controller = (function(budgetCtrl, UICtrl){
 
         var budget=budgetCtrl.getBudget();
         console.log(budget);
+        UICtrl.displayBudget(budget);
+       
 
 
         
@@ -220,10 +262,30 @@ var Controller = (function(budgetCtrl, UICtrl){
 
     };
 
+    var ctrlDeleteItem=function(event){ 
+        var itemID,splitId,type,ID;
+        itemID=  event.target.parentNode.parentNode.parentNode.parentNode.id;
+        if(itemID){
+            splitId=itemID.split('-');
+            type=splitId[0];
+            ID= parseInt(splitId[1]);
 
+            budgetCtrl.deleteItem(type,ID);
+            UICtrl.deleteItem(itemID);
+            updateBudget();
+        } 
+
+    };
     return { 
         init : function(){
           //  console.log('hi');
+          UICtrl.displayBudget({
+            budget:0,
+            totalInc:0,
+            totalExp:0,
+            percentage:-1
+          });
+
             setupEventListner();
         }
     };
